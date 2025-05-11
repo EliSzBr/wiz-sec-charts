@@ -74,13 +74,8 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHPAT_PACKAGES }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: helm login as well...
-        run: |
-          echo  ${{ secrets.GHPAT_PACKAGES }} | helm registry login ghcr.io \
-            --username ${{ github.actor }} \
-            --password-stdin
       - name: helm package
         id: helm-package
         run: |
@@ -90,14 +85,17 @@ jobs:
       - name: helm push
         id: helm-push
         run: |
+          lowercase_repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          HELM_REPO_NAME="ghcr.io/$lowercase_repo_name"
           cd ${{ matrix.chart }}
           helm push ./${{ matrix.chart }}-${{ matrix.version }}.tgz \
-                    oci://ghcr.io/${{ github.repository }}/ | tee push_output.txt
+                    "oci://$HELM_REPO_NAME" 2>&1 | tee push_output.txt
           digest="$(cat push_output.txt | grep -Eo "sha256:.*$")"
           echo "digest=${digest}" >> $GITHUB_OUTPUT
+          echo "helm_repo_name=${HELM_REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Sign the container image
-        run: cosign sign --yes ghcr.io/${{ github.repository }}@${{ steps.helm-push.outputs.digest }}
+        run: cosign sign --yes ${{ steps.helm-push.outputs.helm_repo_name }}@${{ steps.helm-push.outputs.digest }}
         # cosign sign --yes --rekor-url "https://rekor.sigstore.dev/" ${{ steps.digest.outputs.image_sha }}
 
       - name: Verify the image signing
