@@ -19,7 +19,8 @@ jobs:
     name: list changed charts
     runs-on: ubuntu-latest
     outputs:
-      ecr_matrix: ${{ steps.changed-charts.outputs.charts_matrix }}
+      charts_matrix: ${{ steps.changed-charts.outputs.charts_matrix }}
+      any_changed: ${{ steps.changed-charts.outputs.any_changed }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # https://github.com/actions/checkout/releases/tag/v4.2.2
         with:
@@ -55,7 +56,7 @@ jobs:
     if: ${{ needs.list-changed-charts.outputs.any_changed == 'true' }}
     strategy:
       matrix:
-        include: ${{ fromJson(needs.list-changed-charts.outputs.ecr_matrix) }}
+        include: ${{ fromJson(needs.list-changed-charts.outputs.charts_matrix) }}
     name: push chart to ghcr
     runs-on: ubuntu-latest
     steps:
