@@ -27,6 +27,7 @@ jobs:
       - name: get changed charts
         id: changed-charts
         run: |
+          CHANGED_FILES="$(git diff --name-only HEAD^ HEAD)"
           CHANGED_CHART_DIRS="$(echo "$CHANGED_FILES" | grep -Eo '^[^.][^/]+' | sort -u)"
           echo "changes: ${CHANGED_CHART_DIRS}"
           CHANGES_MATRIX=()
