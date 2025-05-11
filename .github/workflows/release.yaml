@@ -76,18 +76,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHPAT_PACKAGES }}
 
+      - name: helm login as well...
+        run: |
+          echo  ${{ secrets.GHPAT_PACKAGES }} | helm registry login ghcr.io \
+            --username ${{ github.actor }} \
+            --password-stdin
       - name: helm package
         id: helm-package
         run: |
-          cd ${{matrix.chart }}
+          cd ${{ matrix.chart }}
           helm package . --version ${{ matrix.version }}
 
       - name: helm push
         id: helm-push
         run: |
-          cd ${{matrix.chart }}
-          helm push ${{matrix.chart }}-${{ matrix.version }}.tgz \
-                    oci://ghcr.io/${{ github.repository_owner }} | tee push_output.txt
+          cd ${{ matrix.chart }}
+          helm push ./${{ matrix.chart }}-${{ matrix.version }}.tgz \
+                    oci://ghcr.io/${{ github.repository_owner }}/ | tee push_output.txt
           digest="$(cat push_output.txt | grep -Eo "sha256:.*$")"
           echo "digest=${digest}" >> $GITHUB_OUTPUT
 
