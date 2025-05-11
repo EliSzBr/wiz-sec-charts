@@ -14,6 +14,11 @@ permissions:
   id-token: write
   packages: write
 
+defaults:
+  run:
+    shell: bash
+
+
 jobs:
   list-changed-charts:
     name: list changed charts
@@ -95,14 +100,12 @@ jobs:
           echo "helm_repo_name=${HELM_REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Sign the container image
-        run: cosign sign --yes ${{ steps.helm-push.outputs.helm_repo_name }}/${{ matrix.chart }}@${{ steps.helm-push.outputs.digest }}
-        # cosign sign --yes --rekor-url "https://rekor.sigstore.dev/" ${{ steps.digest.outputs.image_sha }}
+        run: |
+          cosign sign --yes ${{ steps.helm-push.outputs.helm_repo_name }}/${{ matrix.chart }}@${{ steps.helm-push.outputs.digest }}
 
       - name: Verify the image signing
         run: |
-          # TODO: this will fail - since we push from a tag...
-          cosign verify ${{ steps.helm-push.outputs.digest }} \
-            --rekor-url "https://rekor.sigstore.dev/"  \
-            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yaml@refs/heads/main" \
+          cosign verify ${{ steps.helm-push.outputs.helm_repo_name }}/${{ matrix.chart }}@${{ steps.helm-push.outputs.digest }} \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yaml@refs/heads/${{ github.ref_name }}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" | \
           jq .
