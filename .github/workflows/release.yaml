@@ -87,8 +87,7 @@ jobs:
         run: |
           cd ${{matrix.chart }}
           helm push ${{matrix.chart }}-${{ matrix.version }}.tgz \
-                    oci://ghcr.io/${{ github.repository }} \
-                    --version ${{ matrix.version }} | tee push_output.txt
+                    oci://ghcr.io/${{ github.repository }} | tee push_output.txt
           digest="$(cat push_output.txt | grep -Eo "sha256:.*$")"
           echo "digest=${digest}" >> $GITHUB_OUTPUT
 
