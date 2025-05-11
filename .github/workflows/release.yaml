@@ -95,7 +95,7 @@ jobs:
           echo "helm_repo_name=${HELM_REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Sign the container image
-        run: cosign sign --yes ${{ steps.helm-push.outputs.helm_repo_name }}@${{ steps.helm-push.outputs.digest }}
+        run: cosign sign --yes ${{ steps.helm-push.outputs.helm_repo_name }}/${{ matrix.chart }}@${{ steps.helm-push.outputs.digest }}
         # cosign sign --yes --rekor-url "https://rekor.sigstore.dev/" ${{ steps.digest.outputs.image_sha }}
 
       - name: Verify the image signing
